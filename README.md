@@ -4,4 +4,4 @@ The title of the project is Top-view Shooting game, this type of game is also ca
 
 Tutor: Amir Aly (former), Mark Dixon
 
-First Update is for configure the Development Environment, Add Ship Model and move script 
+The first additions are all named to configure the development environment, adding a series of necessary development packages and public materials that need to be used in the development.
