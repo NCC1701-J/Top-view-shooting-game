@@ -3,26 +3,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class ShipController : MonoBehaviour
-{
-    bool IsDead = false;
+{   
+   protected Move movement;
 
+    [SerializeField]
+    protected  TurretsContorl[] Turrets;
 
-    protected Move movement;
-
-
-    protected virtual void Start()
+   protected virtual void Start()
     {
         movement = transform.GetComponent<Move>();
+        Turrets = transform.GetComponentsInChildren<TurretsContorl>(true);
     }
 
     protected virtual void Update()
     {
-
+       
     }
 
     protected virtual void FixedUpdate()
     {
-        if (IsDead) { return; }
         ControlUpdate();
     }
 
