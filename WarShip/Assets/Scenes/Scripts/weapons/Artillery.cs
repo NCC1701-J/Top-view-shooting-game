@@ -7,6 +7,10 @@ public class Artillery : Emitter
     [SerializeField]
     private Transform model;
 
+    float spreadRadius;
+
+    Vector3 TargetDropPos = Vector3.zero;
+
     /// <summary>
     /// Maximum elevation angle
     /// </summary>
@@ -47,12 +51,20 @@ public class Artillery : Emitter
 
     protected override void Update()
     {
-        AnimUpdate();      
-       //GetFireAngle(target.position);
-       RotateUpdate();
+        AnimUpdate();
+        float velocity = target.GetComponent<Rigidbody>().velocity.magnitude;
 
+        t.targetPos = drawPos;
+        //GetFireAngle(target.position);
+        RotateUpdate();
     }
-   
+
+    public void GetTargetDrop()
+    {
+        Vector3 targetPos = transform.GetComponentInParent<TurretsContorl>().targetPos;
+        TargetDropPos = new Vector3(targetPos.x, 0, targetPos.z);
+    }
+
 
     void AnimUpdate()
     {   
@@ -63,6 +75,35 @@ public class Artillery : Emitter
     Vector3 Vector_Y2Zero(Vector3 v)
     {
         return new Vector3(v.x, 0, v.z);
+    }
+
+    void SimulationDropPos_visualization(Vector3 direction)
+    {
+        float time = 0;
+
+        Ray ray = new Ray();
+        RaycastHit hit;
+        Vector3 move = Vector3.zero;
+
+        Vector3 curPos = muzzle.position;
+
+        while (!Physics.Raycast(ray, out hit, move.magnitude, 1 << LayerMask.NameToLayer("Sea")) && curPos.y > 0)
+        {
+            Vector3 gravDir = Vector3.down * G * time;
+
+            move = (direction * speed + gravDir) * Time.fixedDeltaTime;
+
+            ray = new Ray(curPos, move);
+            Debug.DrawRay(curPos, move, Color.red);
+            curPos += move;
+            time += Time.fixedDeltaTime;
+        }
+        if (hit.transform)
+        {
+            curPos = hit.point;
+        }
+
+        Debug.DrawRay(curPos, Vector3.up * 10, Color.black);
     }
 
     Vector2 SimulationProjectile(float X, float Y, float V, float G)
