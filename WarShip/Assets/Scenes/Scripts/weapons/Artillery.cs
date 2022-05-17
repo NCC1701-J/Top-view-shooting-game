@@ -14,17 +14,17 @@ public class Artillery : Emitter
     /// <summary>
     /// Maximum elevation angle
     /// </summary>
-    public float MaxElevation=10f;
+    public float MaxElevation = 10f;
     /// <summary>
     /// Maximum pitch angle
     /// </summary>
-    public float MaxDepression=-5f;
+    public float MaxDepression = -5f;
 
     float AngleOfPitch;
 
     float G = 10f;
     [SerializeField]
-    float d_offset=0;
+    float d_offset = 0;
 
     public Transform Model
     {
@@ -54,9 +54,11 @@ public class Artillery : Emitter
         AnimUpdate();
         float velocity = target.GetComponent<Rigidbody>().velocity.magnitude;
 
+        drawPos = CalculateLeadPos(target.position, velocity, target.forward, 1f, target.position, float.MaxValue);
         t.targetPos = drawPos;
         //GetFireAngle(target.position);
         RotateUpdate();
+
     }
 
     public void GetTargetDrop()
@@ -66,8 +68,10 @@ public class Artillery : Emitter
     }
 
 
+
+
     void AnimUpdate()
-    {   
+    {
         float t = Time.time - PrevFireTime;
         model.localPosition = Vector3.forward * LerpCurve.Evaluate(t);
     }
@@ -104,6 +108,43 @@ public class Artillery : Emitter
         }
 
         Debug.DrawRay(curPos, Vector3.up * 10, Color.black);
+    }
+
+
+    //If accuracy value is higher, the number of recursive calculations will also higher
+    public Vector3 CalculateLeadPos(Vector3 tarPos, float tarSpeed, Vector3 tarTowards, float accuracy, Vector3 sim_Point, float diff)
+    {
+        if (sim_Point == Vector3.zero)
+        {
+            return Vector3.zero;
+        }
+        Vector3 tarDir = (Vector_Y2Zero(sim_Point) - Vector_Y2Zero(transform.parent.position)).normalized;
+        Quaternion tarRotation = Quaternion.FromToRotation(tarDir, Vector3.forward);
+        Vector3 LocalHitPos = tarRotation * (sim_Point - muzzle.position);
+
+        float V = speed;
+        float X = LocalHitPos.z;
+        float Y = -LocalHitPos.y + d_offset;
+        Vector2 TT = SimulationProjectile(X, Y, V, G);
+
+        if (TT == Vector2.zero)
+        {
+            return Vector3.zero;
+        }
+        Vector3 newSim_point = Sim_DropPos(tarSpeed, tarPos, tarTowards, TT.y);
+        float curDiff = (newSim_point - sim_Point).magnitude;
+        if (curDiff > diff)
+        {
+            Debug.Log("Error:Out Of Range Or Other");
+            return Vector3.zero;
+        }
+        if (curDiff < accuracy)
+        {
+            Debug.DrawRay(newSim_point, Vector3.up * 10, Color.yellow);
+            AngleOfPitch = TT.x * Mathf.Rad2Deg;
+            return newSim_point;
+        }
+        return CalculateLeadPos(tarPos, tarSpeed, tarTowards, accuracy, newSim_point, curDiff);
     }
 
     Vector2 SimulationProjectile(float X, float Y, float V, float G)
@@ -154,22 +195,22 @@ public class Artillery : Emitter
     //    float X = d;
     //    float Y = h;
     //    float V = speed;
-        //Debug.Log(" X:" + X + " Y:" + Y + " V:" +V+ " G:" + G);
-        //float angle = SimulationProjectile(X,Y,V,G).x;
+    //Debug.Log(" X:" + X + " Y:" + Y + " V:" +V+ " G:" + G);
+    //float angle = SimulationProjectile(X,Y,V,G).x;
 
 
 
-        //float a = Mathf.Sqrt((speed * speed * speed * speed - G * (G * d * d - 2 * h * speed * speed)));
-        //float tanAngle_1 = ((speed * speed + a) / (G * d));
-        //float tanAngle_2 = ((speed * speed - a) / (G * d));
-        //float a1 = Mathf.Atan(tanAngle_1) * Mathf.Rad2Deg;
-        //float a2 = Mathf.Atan(tanAngle_2) * Mathf.Rad2Deg;
+    //float a = Mathf.Sqrt((speed * speed * speed * speed - G * (G * d * d - 2 * h * speed * speed)));
+    //float tanAngle_1 = ((speed * speed + a) / (G * d));
+    //float tanAngle_2 = ((speed * speed - a) / (G * d));
+    //float a1 = Mathf.Atan(tanAngle_1) * Mathf.Rad2Deg;
+    //float a2 = Mathf.Atan(tanAngle_2) * Mathf.Rad2Deg;
 
 
 
-        //float angle = Mathf.Min(a1, a2);
+    //float angle = Mathf.Min(a1, a2);
 
-        //Debug.Log("old"+a1 + ":" + a2);
+    //Debug.Log("old"+a1 + ":" + a2);
 
     //    AngleOfPitch = angle*Mathf.Rad2Deg;
 
@@ -179,11 +220,12 @@ public class Artillery : Emitter
     void RotateUpdate()
     {
         //Limit pitch angle
-        float angle = Mathf.Clamp(AngleOfPitch,MaxDepression,MaxElevation) ;
-        
+        float angle = Mathf.Clamp(AngleOfPitch, MaxDepression, MaxElevation);
+
         //Debug.Log(angle);
 
         transform.localRotation = Quaternion.Euler(new Vector3(-angle, 0, 0));
+        SimulationDropPos_visualization(transform.forward);
         //transform.RotateAround(transform.position, transform.right, angle);
 
     }
@@ -196,6 +238,7 @@ public class Artillery : Emitter
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
+        Gizmos.DrawMesh(mesh, drawPos, target.transform.rotation);
 
     }
 
