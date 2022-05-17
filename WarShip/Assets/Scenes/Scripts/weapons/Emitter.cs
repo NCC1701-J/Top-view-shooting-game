@@ -10,13 +10,15 @@ public class Emitter : MonoBehaviour
     protected float PrevFireTime = float.MinValue;
 
     [SerializeField]
+    protected ParticleSystem[] Particles = new ParticleSystem[0];
+
+    [SerializeField]
     protected Transform muzzle;
 
     protected bool controllerIsPlayer = false;
 
     [SerializeField]
     protected TurretsContorl turrets;
-
 
     public float speed;
 
@@ -75,23 +77,32 @@ public class Emitter : MonoBehaviour
     }
     protected virtual void Shoot()
     {
-       
+
 
     }
 
     public virtual void Fire()
     {
         if (ReadyToShoot)
-        { 
+        {
             Shoot();
+            PlayAllParticles();
             PrevFireTime = Time.time;
         }
     }
-
+    protected void PlayAllParticles()
+    {
+        for (int i = 0; i < Particles.Length; i++)
+        {
+            Particles[i].Play();
+        }
+    }
 #if UNITY_EDITOR
 
     protected virtual void Reset()
     {
+        ParticleSystem[] p = GetComponentsInChildren<ParticleSystem>(true);
+        Particles = p;
         muzzle = transform.Find("Muzzle").transform;
         turrets = transform.GetComponentInParent<TurretsContorl>();
     }
