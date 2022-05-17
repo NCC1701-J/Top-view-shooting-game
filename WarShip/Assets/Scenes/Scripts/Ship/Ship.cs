@@ -21,4 +21,8 @@ public class Ship : MonoBehaviour
 
     }
 
+    public void BeHit(int damage)
+    {
+
+    }
 }

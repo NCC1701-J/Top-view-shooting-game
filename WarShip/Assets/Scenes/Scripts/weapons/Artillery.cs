@@ -65,6 +65,30 @@ public class Artillery : Emitter
         return new Vector3(v.x, 0, v.z);
     }
 
+    Vector2 SimulationProjectile(float X, float Y, float V, float G)
+    {
+        if (G == 0)
+        {
+            float THETA = Mathf.Atan(Y / X);
+            float T = (Y / Mathf.Sin(THETA)) / V;
+            return (new Vector2(THETA, T));
+        }
+        else
+        {
+            float DELTA = Mathf.Pow(V, 4) - G * (G * X * X - 2 * Y * V * V);
+            if (DELTA < 0)
+            {
+                return Vector2.zero;
+            }
+            float rad1 = Mathf.Atan(((V * V) + Mathf.Sqrt(DELTA)) / (G * X));
+            float rad2 = Mathf.Atan(((V * V) - Mathf.Sqrt(DELTA)) / (G * X));
+
+            float rad = Mathf.Min(rad1, rad2);
+            float T = X / (V * Mathf.Cos(rad));
+            return new Vector2(rad, T);
+        }
+    }
+
     Vector3 Sim_DropPos(float speed, Vector3 curPos, Vector3 tarTowards, float time)
     {
         Vector3 sim_pos = Vector_Y2Zero(curPos) + Vector_Y2Zero(tarTowards) * (speed * time);
@@ -124,8 +148,8 @@ public class Artillery : Emitter
     }
 
     protected override void Shoot()
-    {  
-        
+    {
+        Instantiate(projectile).GetComponent<Projectile>().Init(muzzle.position, transform.forward, speed, lifeTime, damage, this.gameObject);
     }
 
     private void OnDrawGizmosSelected()

@@ -10,6 +10,9 @@ public class Emitter : MonoBehaviour
     protected float PrevFireTime = float.MinValue;
 
     [SerializeField]
+    public Transform target;
+
+    [SerializeField]
     protected ParticleSystem[] Particles = new ParticleSystem[0];
 
     [SerializeField]
@@ -19,6 +22,10 @@ public class Emitter : MonoBehaviour
 
     [SerializeField]
     protected TurretsContorl turrets;
+
+    [SerializeField]
+    protected GameObject projectile;
+
 
     public float speed;
 
@@ -103,6 +110,7 @@ public class Emitter : MonoBehaviour
     {
         ParticleSystem[] p = GetComponentsInChildren<ParticleSystem>(true);
         Particles = p;
+
         muzzle = transform.Find("Muzzle").transform;
         turrets = transform.GetComponentInParent<TurretsContorl>();
     }
